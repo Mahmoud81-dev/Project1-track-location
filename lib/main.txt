@@ -1,0 +1,331 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
+
+  final String title;
+
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final _mapController = MapController(initMapWithUserPosition: true);
+  List<GeoPoint> geoPoints = [
+    GeoPoint(latitude: 29.369787697635818, longitude:  30.85359414678732),
+    GeoPoint(latitude: 29.370497702611228, longitude:  30.853924440443762),
+  
+  ];
+  // var markerMap = <String, String>{};
+  // final MarkerIcon destinationMarkerIcon = const MarkerIcon(
+  //   icon: Icon(
+  //     Icons.location_pin,
+  //     color: Colors.red,
+  //     size: 90,
+  //   ),
+  // );
+
+  @override
+  void initState() {
+    super.initState();
+    // WidgetsBinding.instance!.addPostFrameCallback((_) {
+    //   _mapController.listenerMapSingleTapping.addListener(() async {
+    //     //when tap on map, we will add a new marker
+
+    //     var position = _mapController.listenerMapSingleTapping.value;
+
+    //     if (position != null) {
+    //       await _mapController.addMarker(position,
+    //           markerIcon: const MarkerIcon(
+    //             icon: Icon(
+    //               Icons.pin_drop,
+    //               color: Colors.blue,
+    //               size: 48,
+    //             ),
+    //           ));
+
+    //       //add marker to map, to hold information of marker in case
+    //       //we want to use it
+
+    //       var key = '${position.latitude},${position.longitude}';
+    //       markerMap[key] = markerMap.length.toString();
+    //     }
+    //   });
+    // });
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: OSMFlutter(
+        controller: _mapController,
+        mapIsLoading: const Center(
+          child: CircularProgressIndicator(),
+        ),
+        trackMyPosition: true,
+        initZoom: 12,
+        minZoomLevel: 9,
+        maxZoomLevel: 18,
+        stepZoom: 1.0,
+        roadConfiguration: const RoadOption(
+          roadColor: Colors.blueGrey,
+        ),
+
+         userLocationMarker: UserLocationMaker(
+            personMarker: const MarkerIcon(
+                icon: Icon(
+                    Icons.pin_drop,
+                    color: Colors.blue,
+                    size: 80,
+                ),
+            ),
+            directionArrowMarker:const  MarkerIcon(
+                icon: Icon(
+                    Icons.double_arrow,
+                    size: 48,
+                ),
+            ),
+        ),
+        // markerOption: MarkerOption(
+        //   defaultMarker: const MarkerIcon(
+        //     icon: Icon(
+        //       Icons.person_pin_circle,
+        //       color: Colors.black,
+        //       size: 48,
+        //     ),
+        //   ),
+        // ),
+        onMapIsReady: (isReady) async {
+          if (isReady) {
+            // Add user's current location marker
+            GeoPoint geoPoint = await _mapController.myLocation();
+            await _mapController.enableTracking(enableStopFollow: false);
+
+           
+            // await _mapController.addMarker(
+            //   geoPoint,
+            //   markerIcon: const MarkerIcon(
+            //     icon: Icon(
+            //       Icons.accessible,
+            //       color: Colors.blue,
+            //       size: 70,
+            //     ),
+            //   ),
+            // );
+
+            // // Add destination marker
+            // await _mapController.addMarker(
+            //   GeoPoint(
+            //     latitude: widget.destinationLatitude,
+            //     longitude: widget.destinationLongitude,
+            //   ),
+            //   markerIcon: destinationMarkerIcon,
+            // );
+
+            // Draw road between user's current location and destination
+            RoadInfo roadInfo = await _mapController.drawRoad(
+              GeoPoint(
+                latitude: geoPoint.latitude,
+                longitude: geoPoint.longitude,
+              ),
+              GeoPoint(
+                latitude:29.37048473796134,
+                longitude: 30.853945744753947  ,
+              ),
+              roadType: RoadType.foot,
+              roadOption: const RoadOption(
+                roadWidth: 15,
+                roadColor: Colors.blue,
+                zoomInto: true,
+              ),
+            );
+          }
+        },
+        onGeoPointClicked: (geoPoint) {
+          var key = '${geoPoint.latitude},${geoPoint.longitude}';
+
+          // //when user clicks on marker
+          // showModalBottomSheet(
+          //   context: context,
+          //   builder: (context) {
+          //     return Card(
+          //       child: Padding(
+          //         padding: const EdgeInsets.all(8),
+          //         child: Row(
+          //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           mainAxisSize: MainAxisSize.min,
+          //           children: [
+          //             Expanded(
+          //               child: Column(
+          //                 mainAxisSize: MainAxisSize.min,
+          //                 children: [
+          //                   Text(
+          //                     'Position ${markerMap[key]}',
+          //                     style: const TextStyle(
+          //                       fontSize: 20,
+          //                       fontWeight: FontWeight.bold,
+          //                       color: Colors.blue,
+          //                     ),
+          //                   ),
+          //                   const Divider(
+          //                     thickness: 1,
+          //                   ),
+          //                   Text(key),
+          //                 ],
+          //               ),
+          //             ),
+          //             GestureDetector(
+          //               onTap: () => Navigator.pop(context),
+          //               child: const Icon(Icons.clear),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // );
+        },
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final _mapController = MapController(initMapWithUserPosition: true);
+  List<GeoPoint> geoPoints = [];
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: OSMFlutter(
+        controller: _mapController,
+        mapIsLoading: const Center(
+          child: CircularProgressIndicator(),
+        ),
+        trackMyPosition: true,
+        initZoom: 12,
+        minZoomLevel: 9,
+        maxZoomLevel: 18,
+        stepZoom: 1.0,
+        roadConfiguration: const RoadOption(
+          roadColor: Colors.blueGrey,
+        ),
+
+
+        userLocationMarker: UserLocationMaker(
+          personMarker: const MarkerIcon(
+            icon: Icon(
+              Icons.pin_drop,
+              color: Colors.blue,
+              size: 60,
+            ),
+          ),
+
+
+          directionArrowMarker: const MarkerIcon(
+            icon: Icon(
+              Icons.double_arrow,
+              size: 60,
+            ),
+          ),
+        ),
+
+
+
+        onMapIsReady: (isReady) async {
+          if (isReady) {
+            // Add user's current location marker
+            GeoPoint myLocation = await _mapController.myLocation();
+            geoPoints.add(myLocation);
+            print("MyLocation:${geoPoints}=====================");
+            await _mapController.enableTracking(enableStopFollow: false);
+          }
+        },
+
+
+        onLocationChanged: (GeoPoint location) async {
+          // Add user's current location to the list of points
+
+          geoPoints.add(location);
+             print("Location:${location}=====================");
+          if (geoPoints.length >= 2) {
+            // Draw a line between the last two points
+            GeoPoint lastPoint = geoPoints[geoPoints.length - 2];
+
+            //check user change location
+            if (lastPoint.latitude != location.latitude ||
+                lastPoint.longitude != location.longitude) {
+                     print("==============draw=============");
+              RoadInfo roadInfo = await _mapController.drawRoad(
+                lastPoint,
+                location,
+                roadType: RoadType.foot,
+                intersectPoint: geoPoints,
+                roadOption: const RoadOption(
+                  roadWidth: 15,
+                  roadColor: Colors.blue,
+                  zoomInto: true,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+}
+
